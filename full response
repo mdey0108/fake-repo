@@ -1,0 +1,478 @@
+Here is the complete folder structure, along with the necessary files and `pom.xml` for the `com.phh.runreport` project:
+
+---
+
+### **Folder Structure**
+```
+runreport/
+├── src/
+│   ├── main/
+│   │   ├── java/
+│   │   │   └── com/
+│   │   │       └── phh/
+│   │   │           └── runreport/
+│   │   │               ├── config/
+│   │   │               │   └── ConfigReader.java
+│   │   │               ├── service/
+│   │   │               │   ├── DatabaseService.java
+│   │   │               │   ├── EmailService.java
+│   │   │               │   └── SchedulerService.java
+│   │   │               └── RunReportApplication.java
+│   │   └── resources/
+│   │       ├── application.properties
+│   │       └── log4j2.xml
+│   └── test/
+│       └── java/
+├── target/
+├── app.config
+├── run.bat
+└── pom.xml
+```
+
+---
+
+### **Files**
+
+#### 1. **`pom.xml`**
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.phh</groupId>
+    <artifactId>runreport</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <properties>
+        <java.version>11</java.version>
+        <spring.boot.version>2.7.0</spring.boot.version>
+    </properties>
+
+    <dependencies>
+        <!-- Spring Boot Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter Data JPA -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- Spring Boot Starter Mail -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- Oracle JDBC Driver -->
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc8</artifactId>
+            <version>21.5.0.0</version>
+        </dependency>
+
+        <!-- Log4j2 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+        <!-- Spring Boot DevTools (Optional) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Spring Boot Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Spring Boot Maven Plugin -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+```
+
+---
+
+#### 2. **`app.config`**
+```properties
+# Database Configuration
+db.url=jdbc:oracle:thin:@localhost:1521:ORCL
+db.username=your_username
+db.password=your_password
+
+# Query Configuration
+query=SELECT * FROM your_table
+
+# Email Configuration
+email.from=your_email@example.com
+email.to=recipient_email@example.com
+email.subject=Data Export
+email.body=Please find the attached CSV file.
+email.no.data.body=No data found in the database for the given query.
+email.host=smtp.example.com
+email.port=587
+email.username=your_email@example.com
+email.password=your_email_password
+
+# Attachment Configuration
+attachment.name=export_data
+attachment.remote.location=/remote/path/to/save
+
+# Failure Configuration
+failure.email=admin@example.com
+
+# Logging Configuration
+log.file.location=/path/to/logs/application.log
+```
+
+---
+
+#### 3. **`application.properties`**
+```properties
+# Disable default Spring Boot logging
+logging.config=classpath:log4j2.xml
+```
+
+---
+
+#### 4. **`log4j2.xml`**
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <File name="FileAppender" fileName="${sys:log.file.location}">
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %msg%n</Pattern>
+            </PatternLayout>
+        </File>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %msg%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+    </Loggers>
+</Configuration>
+```
+
+---
+
+#### 5. **`run.bat`**
+```bat
+@echo off
+set JAVA_HOME=C:\path\to\java\version
+set LOG_FILE_LOCATION=C:\path\to\logs\application.log
+
+%JAVA_HOME%\bin\java -Dlog.file.location=%LOG_FILE_LOCATION% -jar runreport.jar --spring.config.location=C:/config/app.config
+```
+
+---
+
+#### 6. **`ConfigReader.java`**
+```java
+package com.phh.runreport.config;
+
+import org.springframework.stereotype.Component;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Properties;
+
+@Component
+public class ConfigReader {
+    private Properties properties;
+
+    public ConfigReader() {
+        properties = new Properties();
+        try (FileInputStream input = new FileInputStream("C:/config/app.config")) {
+            properties.load(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getProperty(String key) {
+        return properties.getProperty(key);
+    }
+
+    public String getEmailHost() {
+        return properties.getProperty("email.host");
+    }
+
+    public int getEmailPort() {
+        return Integer.parseInt(properties.getProperty("email.port"));
+    }
+
+    public String getEmailUsername() {
+        return properties.getProperty("email.username");
+    }
+
+    public String getEmailPassword() {
+        return properties.getProperty("email.password");
+    }
+
+    public String getNoDataEmailBody() {
+        return properties.getProperty("email.no.data.body");
+    }
+
+    public String getLogFileLocation() {
+        return properties.getProperty("log.file.location");
+    }
+}
+```
+
+---
+
+#### 7. **`DatabaseService.java`**
+```java
+package com.phh.runreport.service;
+
+import com.phh.runreport.config.ConfigReader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.FileWriter;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+@Service
+public class DatabaseService {
+
+    @Autowired
+    private ConfigReader configReader;
+
+    public String exportDataToCsv() {
+        String csvFilePath = configReader.getProperty("attachment.remote.location") + "/" +
+                configReader.getProperty("attachment.name") + "_" +
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".csv";
+
+        try (Connection connection = DriverManager.getConnection(
+                configReader.getProperty("db.url"),
+                configReader.getProperty("db.username"),
+                configReader.getProperty("db.password"));
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(configReader.getProperty("query"));
+             FileWriter writer = new FileWriter(csvFilePath)) {
+
+            // Write CSV header
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                writer.append(metaData.getColumnName(i));
+                if (i < columnCount) writer.append(",");
+            }
+            writer.append("\n");
+
+            // Write CSV data
+            while (resultSet.next()) {
+                for (int i = 1; i <= columnCount; i++) {
+                    writer.append(resultSet.getString(i));
+                    if (i < columnCount) writer.append(",");
+                }
+                writer.append("\n");
+            }
+
+            return csvFilePath;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+}
+```
+
+---
+
+#### 8. **`EmailService.java`**
+```java
+package com.phh.runreport.service;
+
+import com.phh.runreport.config.ConfigReader;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import java.io.File;
+import java.util.Properties;
+
+@Service
+public class EmailService {
+
+    @Autowired
+    private ConfigReader configReader;
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Bean
+    public JavaMailSender getJavaMailSender() {
+        JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+        mailSender.setHost(configReader.getEmailHost());
+        mailSender.setPort(configReader.getEmailPort());
+        mailSender.setUsername(configReader.getEmailUsername());
+        mailSender.setPassword(configReader.getEmailPassword());
+
+        Properties props = mailSender.getJavaMailProperties();
+        props.put("mail.transport.protocol", "smtp");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.debug", "true");
+
+        return mailSender;
+    }
+
+    public void sendEmailWithAttachment(String attachmentPath, boolean hasData) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom(configReader.getProperty("email.from"));
+            helper.setTo(configReader.getProperty("email.to"));
+            helper.setSubject(configReader.getProperty("email.subject"));
+            helper.setText(hasData ? configReader.getProperty("email.body") : configReader.getNoDataEmailBody());
+
+            if (hasData) {
+                FileSystemResource file = new FileSystemResource(new File(attachmentPath));
+                helper.addAttachment(file.getFilename(), file);
+            }
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendFailureNotification(String errorMessage) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom(configReader.getProperty("email.from"));
+            helper.setTo(configReader.getProperty("failure.email"));
+            helper.setSubject("Data Export Failure");
+            helper.setText("Error: " + errorMessage);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+---
+
+#### 9. **`SchedulerService.java`**
+```java
+package com.phh.runreport.service;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.io.File;
+
+@Service
+public class SchedulerService {
+
+    private static final Logger logger = LogManager.getLogger(SchedulerService.class);
+
+    @Autowired
+    private DatabaseService databaseService;
+
+    @Autowired
+    private EmailService emailService;
+
+    public void run() {
+        logger.info("Starting data export process...");
+        String csvFilePath = databaseService.exportDataToCsv();
+
+        if (csvFilePath != null) {
+            File csvFile = new File(csvFilePath);
+            boolean hasData = csvFile.length() > 0; // Check if the file has data
+
+            if (hasData) {
+                logger.info("Data found. Sending email with attachment...");
+            } else {
+                logger.warn("No data found in the database.");
+            }
+
+            emailService.sendEmailWithAttachment(csvFilePath, hasData);
+        } else {
+            logger.error("Failed to export data to CSV.");
+            emailService.sendFailureNotification("Failed to export data to CSV.");
+        }
+    }
+}
+```
+
+---
+
+#### 10. **`RunReportApplication.java`**
+```java
+package com.phh.runreport;
+
+import com.phh.runreport.service.SchedulerService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class RunReportApplication implements CommandLineRunner {
+
+    @Autowired
+    private SchedulerService schedulerService;
+
+    public static void main(String[] args) {
+        SpringApplication.run(RunReportApplication.class, args);
+    }
+
+    @Override
+    public void run(String... args) throws Exception {
+        schedulerService.run();
+    }
+}
+```
+
+---
+
+### **Final Notes**
+1. Replace placeholders (e.g., database credentials, email details) with actual values in the `app.config` file.
+2. Ensure the `log4j2.xml` file is correctly configured in `src/main/resources`.
+3. Build the project using `mvn clean package` and run it using the `run.bat` file.
