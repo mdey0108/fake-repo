@@ -1,0 +1,9 @@
+src/main/java/com/phh/runreport
+├── config
+├── controller
+├── service
+├── repository
+├── model
+└── RunReportApplication.java
+src/main/resources
+└── application.properties
