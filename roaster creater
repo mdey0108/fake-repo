@@ -1,0 +1,241 @@
+Here’s a simple implementation of the **Support Plan Generator** using **HTML**, **CSS**, and **JavaScript**. This version does not use React or any frameworks, making it lightweight and easy to understand.
+
+---
+
+### **Folder Structure**
+```
+support-plan-app/
+├── index.html
+├── styles.css
+├── script.js
+└── team.csv (sample CSV file)
+```
+
+---
+
+### **Code Implementation**
+
+#### 1. **`index.html`**
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Support Plan Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Support Plan Generator</h1>
+
+    <!-- CSV File Upload -->
+    <div class="upload-section">
+      <label for="csv-upload" class="upload-label">
+        Upload CSV File
+      </label>
+      <input type="file" id="csv-upload" accept=".csv" />
+    </div>
+
+    <!-- Generate Plan Button -->
+    <button id="generate-plan" class="generate-button">
+      Generate Support Plan
+    </button>
+
+    <!-- Support Plan Table -->
+    <table id="support-plan-table" class="support-plan-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Team Member</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Rows will be populated by JavaScript -->
+      </tbody>
+    </table>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+```
+
+---
+
+#### 2. **`styles.css`**
+```css
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: #f4f4f9;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+h1 {
+  color: #333;
+}
+
+.upload-section {
+  margin: 20px 0;
+}
+
+.upload-label {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+#csv-upload {
+  display: none;
+}
+
+.generate-button {
+  padding: 10px 20px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 20px 0;
+}
+
+.support-plan-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.support-plan-table th,
+.support-plan-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.support-plan-table th {
+  background-color: #f2f2f2;
+  color: #333;
+}
+
+.support-plan-table tr:hover {
+  background-color: #f1f1f1;
+}
+```
+
+---
+
+#### 3. **`script.js`**
+```javascript
+document.getElementById("csv-upload").addEventListener("change", function (event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const text = e.target.result;
+      const teamMembers = parseCSV(text);
+      window.teamMembers = teamMembers; // Store team members globally
+    };
+    reader.readAsText(file);
+  }
+});
+
+document.getElementById("generate-plan").addEventListener("click", function () {
+  if (!window.teamMembers) {
+    alert("Please upload a CSV file first.");
+    return;
+  }
+
+  const plan = generateSupportPlan(window.teamMembers);
+  displaySupportPlan(plan);
+});
+
+function parseCSV(text) {
+  const rows = text.split("\n");
+  return rows.map((row) => row.split(",")[0]); // Assuming names are in the first column
+}
+
+function generateSupportPlan(teamMembers) {
+  const startDate = new Date(); // Start from today
+  const plan = [];
+  let memberIndex = 0;
+
+  for (let i = 0; i < 30; i++) {
+    // Generate plan for 30 days
+    const currentDate = new Date(startDate);
+    currentDate.setDate(startDate.getDate() + i);
+
+    // Skip weekends
+    if (currentDate.getDay() === 6 || currentDate.getDay() === 0) {
+      continue;
+    }
+
+    // Assign team member
+    const member = teamMembers[memberIndex % teamMembers.length];
+    plan.push({
+      date: currentDate.toISOString().split("T")[0], // Format as YYYY-MM-DD
+      member: member,
+    });
+
+    memberIndex++;
+  }
+
+  return plan;
+}
+
+function displaySupportPlan(plan) {
+  const tableBody = document.querySelector("#support-plan-table tbody");
+  tableBody.innerHTML = ""; // Clear existing rows
+
+  plan.forEach((entry) => {
+    const row = document.createElement("tr");
+    const dateCell = document.createElement("td");
+    const memberCell = document.createElement("td");
+
+    dateCell.textContent = entry.date;
+    memberCell.textContent = entry.member;
+
+    row.appendChild(dateCell);
+    row.appendChild(memberCell);
+    tableBody.appendChild(row);
+  });
+}
+```
+
+---
+
+#### 4. **Sample CSV File (`team.csv`)**
+Create a file named `team.csv` with the following content:
+```csv
+Name
+Alice
+Bob
+Charlie
+Diana
+```
+
+---
+
+### **How to Run the App**
+
+1. Save the files (`index.html`, `styles.css`, `script.js`, and `team.csv`) in the same folder.
+2. Open `index.html` in your browser.
+3. Upload the `team.csv` file.
+4. Click **Generate Support Plan** to see the plan.
+
+---
+
+### **Features**
+- Upload a CSV file with team members.
+- Generate a 30-day support plan, skipping weekends.
+- Display the plan in a table format.
+
+This is a simple, lightweight implementation using plain HTML, CSS, and JavaScript. You can expand it further by adding features like dynamic date ranges or exporting the plan to a file.
